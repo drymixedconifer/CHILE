@@ -1,0 +1,13 @@
+Package: CHILE
+Title: Chaos In-Silico Landscape Engine
+Version: 0.9.0
+Authors@R: person('CHILE', 'Development Team', role=c('aut','cre'), email='maintainer@example.org')
+Description: Standalone generators for synthetic spatial fields, point processes,
+    geometric features, and landscape composition. Raster outputs use terra.
+    Generators run independently and support optional environmental conditioning.
+License: MIT + file LICENSE
+Encoding: UTF-8
+Depends: R (>= 4.1.0)
+Imports: terra, stats, graphics, utils
+Suggests: testthat
+RoxygenNote: 7.3.2
