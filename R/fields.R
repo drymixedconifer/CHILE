@@ -41,8 +41,7 @@
 # Fourier space. Spectral amplitudes are nonnegative and symmetric, so the
 # inverse transform is real. Periodic boundary is an FFT approximation.
 .chile_fft_field <- function(nr, nc, amplitude) {
-  if (!identical(dim(amplitude), c(nr, nc)))
-    stop("amplitude must have dimensions nrow x ncol")
+  stopifnot(all(dim(amplitude) == c(nr, nc)))
   w <- matrix(stats::rnorm(nr * nc), nr, nc)
   z <- Re(fft(fft(w) * amplitude, inverse = TRUE)) / (nr * nc)
   .chile_standardize(z)
