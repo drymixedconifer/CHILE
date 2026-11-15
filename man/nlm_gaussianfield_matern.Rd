@@ -1,7 +1,7 @@
 \name{nlm_gaussianfield_matern}
 \alias{nlm_gaussianfield_matern}
 \title{Gaussianfield matern generator}
-\description{Stationary Matérn-like spectral field on a periodic FFT grid; finite-domain approximation.}
+\description{Stationary Matérn spectral field on a periodic FFT grid; finite-domain approximation.}
 \usage{nlm_gaussianfield_matern(ncol=256, nrow=256, resolution=1, range=20, sill=1, mean=0, nu=1, angle=0, range_minor=range, template=NULL, seed=NULL)}
 \arguments{
   \item{ncol}{Number of columns when template is absent.}

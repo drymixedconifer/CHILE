@@ -1,6 +1,6 @@
 # CHILE
 
-**Chaos in Silico Landscape Engine** · v0.9 development reference
+**Chaos in Silico Landscape Engine** · v0.9.2 development reference
 
 CHILE generates synthetic landscapes from independent **random fields**, **point processes**, and **geometric objects**. You can simulate a landscape with no inputs, use an existing `terra::SpatRaster` as a template, or use an environmental raster to influence where objects or points are generated. Composition is a separate step.
 
@@ -10,7 +10,7 @@ CHILE is designed for controlled spatial experiments: vary autocorrelation, anis
 
 ```r
 library(CHILE)
-library(terra)   # attaches SpatRaster plot methods
+library(terra)   # optional: CHILE attaches terra
 
 nlm_list()       # available functions and families
 nlm_show()       # default gallery
@@ -27,7 +27,7 @@ b <- nlm_blob(n = 40, environment = x, seed = 1)
 plot(b$raster)
 ```
 
-**Requirements:** R ≥ 4.1; `terra` is the spatial dependency. The package uses base R and the standard `stats`/`graphics` namespaces. No `sf`, DEM, D8, or external cost raster is needed. The standalone `CHILE` source package includes conventional `.Rd` help files, so `?nlm_points` should work in a correctly installed package. If R's Help pane returns an internal-server error, check `help("nlm_points", package="CHILE")` or `tools::Rd2txt(system.file("man/nlm_points.Rd", package="CHILE"))` as a diagnostic (the latter may depend on whether the installed package retains source `.Rd` files).
+**Requirements:** R ≥ 4.1; `terra` is the spatial dependency. The package also uses the CRAN `ambient` package for procedural noise, plus base R and the standard `stats`/`graphics` namespaces. No `sf`, DEM, D8, or external cost raster is needed. The standalone `CHILE` source package includes conventional `.Rd` help files, so `?nlm_points` should work in a correctly installed package. If R's Help pane returns an internal-server error, check `help("nlm_points", package="CHILE")` or `tools::Rd2txt(system.file("man/nlm_points.Rd", package="CHILE"))` as a diagnostic (the latter may depend on whether the installed package retains source `.Rd` files).
 
 ### Shared conventions
 
@@ -69,7 +69,7 @@ nlm_gaussianfield(ncol=256, nrow=256, resolution=1,
 - `range_minor`: minor-axis scale; set below `range` for elongated structure.
 - `angle`: orientation of major axis.
 - `mean`: output location; `sill`: output variance scale (`sd = sqrt(sill)`).
-- Implemented through `nlm_anisotropic()` with Gaussian spectral filtering. Despite its historical name, this **is not an exponential-covariance implementation** in v0.9.
+- Implemented through `nlm_anisotropic()` with Gaussian spectral filtering. Uses a two-dimensional exponential covariance spectrum on a periodic FFT grid, with sample mean and variance standardized. Finite-grid covariance is approximate.
 
 ```r
 x <- nlm_gaussianfield(range = 50, range_minor = 10,
@@ -184,7 +184,7 @@ nlm_fbm(ncol=256, nrow=256, resolution=1,
 - Internally calls `nlm_spectral(beta = 2*H + 2)` and anchors the first cell at zero.
 - **Approximation only**, not mathematically exact fractional Brownian motion with stationary increments.
 
-### `nlm_midpoint()` — midpoint-like fractal texture
+### `nlm_midpoint()` — diamond-square fractal terrain
 
 ```r
 nlm_midpoint(size=129, roughness=0.7,
@@ -193,34 +193,87 @@ nlm_midpoint(size=129, roughness=0.7,
 ```
 
 - `size`: convenient default for square grid dimensions; it is *not* restricted to `2^k + 1` in this release.
-- `roughness`: strictly in `(0,1)`; controls weights in a four-scale spectral approximation.
-- Despite the name, **this version does not implement the diamond-square midpoint-displacement algorithm**.
+- `roughness`: strictly in `(0,1)`; controls the decay of random displacement amplitude at each finer subdivision.
+- Implements the diamond-square midpoint-displacement algorithm on an enclosing `2^k + 1` square; output is cropped to the requested dimensions.
 
-### `nlm_ambient()` — convenient noise presets
-
-```r
-nlm_ambient(ncol=256, nrow=256, resolution=1,
-            extent=NULL, crs="", type="perlin",
-            frequency=0.02, fractal=NULL, octaves=4,
-            lacunarity=2, gain=0.5, normalize=TRUE,
-            rescale_range=c(0,1), template=NULL, seed=NULL)
-```
-
-- `type`: **`"perlin"`, `"simplex"`, `"value"`, `"worley"`, `"white"`**.
-- `frequency`: inverse characteristic scale; affects the range of component fields, or seed density in `worley`.
-- `fractal`: `NULL`, `"billow"`, or `"rigidmulti"` have implemented transformations. Other strings are not validated and have no special effect.
-- `octaves`: number of multiscale components.
-- `lacunarity`: scale ratio across successive octaves.
-- `gain`: successive octave weights.
-- `normalize`: rescale the output to `rescale_range`; if `FALSE`, retain raw field values.
-- `extent`, `crs`: optional spatial metadata when no `template` is provided.
-- Important: `perlin`, `simplex`, and `value` are **currently the same underlying multiscale Gaussian approximation**. These are not distinct implementations of their named noise algorithms. `worley` is nearest-feature distance; `white` is independent uniform noise.
+### `nlm_ambient()` — native procedural noise (via ambient)
 
 ```r
-x <- nlm_ambient(type = "worley", frequency = 0.015, seed = 2)
-y <- nlm_ambient(type = "perlin", octaves = 5, gain = 0.4,
-                 lacunarity = 2, seed = 2)
+nlm_ambient(ncol=256, nrow=256, resolution=1, extent=NULL, crs="",
+            type="simplex", frequency=0.02, fractal=NULL, octaves=4,
+            lacunarity=2, gain=0.5, perturbation="none",
+            perturbation_amplitude=1, angle=0, anisotropy=1,
+            interpolator="quintic", distance="euclidean", value="cell",
+            distance_ind=c(1,2), jitter=0.45,
+            blue_sd=10, blue_seed_frac=0.1,
+            normalize=TRUE, rescale_range=c(0,1), template=NULL, seed=NULL)
 ```
+
+This function now uses **native `ambient` generators**, not CHILE's earlier approximations. No input environment is needed. Noise is sampled in **cell coordinates**, so `frequency` and domain-warp distances have the same interpretation regardless of a template's map units.
+
+| Parameter | Options and interpretation |
+|---|---|
+| `type` | `perlin`, `simplex`, `cubic`, `value`, `white`, `worley`, `blue`, `waves`, `spheres`, `checkerboard` |
+| `frequency` | Lattice cycles per cell; 0.01 makes coarser patterns than 0.05 |
+| `fractal` | `NULL`/`none`, `fbm`, `billow`, `rigid-multi` |
+| `octaves` | Number of noise scales when a fractal is active |
+| `lacunarity` | Multiplier of frequency for each successive octave |
+| `gain` | Multiplier of amplitude for each successive octave |
+| `perturbation` | `none`, `normal` (single-scale), `fractal` (three-scale) domain warping |
+| `perturbation_amplitude` | Warp strength measured in cells |
+| `angle` | Orientation of major axis, counterclockwise degrees from positive x |
+| `anisotropy` | Major/minor scale ratio (1 isotropic, 5 elongated) |
+| `interpolator` | For Perlin/value: `linear`, `hermite`, `quintic` |
+| `distance` | Worley: `euclidean`, `manhattan`, `natural` |
+| `value` | Worley: `cell`, `distance`, `distance2`, `distance2add`, `distance2sub`, `distance2mul`, `distance2div` |
+| `distance_ind` | Worley neighbor ranks, e.g. `c(1,2)` |
+| `jitter` | Worley feature-point displacement |
+| `blue_sd`, `blue_seed_frac` | Blue noise void-and-cluster parameters |
+| `normalize`, `rescale_range` | Rescale observed values to a specified interval, default 0–1 |
+
+```r
+# Native noise families
+x <- nlm_ambient(type="simplex", seed=10)
+y <- nlm_ambient(type="worley", value="distance2sub", seed=10)
+
+# Fractal + anisotropy + domain warping
+z <- nlm_ambient(type="simplex", fractal="billow", octaves=5,
+                 angle=45, anisotropy=6,
+                 perturbation="fractal", perturbation_amplitude=20,
+                 seed=10)
+
+nlm_show(simplex=x, worley=y, warped=z)
+```
+
+**Limitations:** Domain warp uses additional native simplex fields and is implemented by CHILE in raster-cell coordinates; it is not a direct one-to-one wrapper for `ambient::noise_*`'s internal `pertubation`. Fractal combinations are procedural octave synthesis, not mathematically exact fBm. `blue` noise is comparatively expensive, is capped at 65,536 cells, and does not use the normal `frequency`, fractal, warp, or anisotropy options. Geometric patterns and white noise do not support fractal synthesis in this wrapper.
+
+### `nlm_ambient_flow()` — directional vector fields
+
+```r
+flow <- nlm_ambient_flow(mode="curl", ncol=150, nrow=150,
+                         type="simplex", frequency=0.02, seed=42)
+plot(flow)
+```
+
+Returns a two-layer raster (`dx`, `dy`). Choose `mode="gradient"` for direction of local increase, or `mode="curl"` for a 90-degree rotated gradient, a useful incompressible-like synthetic movement field. Derivatives use finite differences and raster map units; this is not D8 routing.
+
+### `nlm_ambient_show()` — parameter gallery
+
+```r
+# Compare noise types × fractal families
+nlm_ambient_show(
+  type=c("perlin","simplex","worley","cubic"),
+  fractal=c("none","fbm","billow")
+)
+
+# Compare frequency × warp strength
+nlm_ambient_show(
+  frequency=c(0.008,0.02,0.05),
+  perturbation_amplitude=c(0,12,30)
+)
+```
+
+The gallery varies up to two settings at a time, with a maximum of 24 panels. It holds the seed fixed for reproducibility and returns the generated rasters invisibly. It does not imply equivalent random realizations between different algorithms.
 
 ### `nlm_planargradient()` — linear environmental gradient
 
@@ -735,11 +788,11 @@ p$points$environment <- terra::values(x)[cells, 1]
 
 ## 7. Current development limitations
 
-CHILE v0.9 is an **experimental implementation**, not a validated stochastic simulation library. Several labels represent useful approximations rather than exact named processes. In particular:
+CHILE v0.9.1 is an **experimental implementation**, not a validated stochastic simulation library. Several labels represent useful approximations rather than exact named processes. In particular:
 
-1. `nlm_gaussianfield()` uses Gaussian spectral smoothing rather than exponential covariance; Matérn is an FFT spectral approximation.
-2. `nlm_fbm()` and `nlm_midpoint()` are spectral surrogates, not exact classical algorithms.
-3. `nlm_ambient(type="perlin"/"simplex"/"value")` currently routes to the same Gaussian multiscale implementation.
+1. `nlm_gaussianfield()` uses an exponential covariance spectral filter, and Matérn is an FFT spectral approximation. Both assume periodic boundaries and realize only approximately the intended covariance on finite grids.
+2. `nlm_fbm()` remains a spectral surrogate rather than exact fractional Brownian motion; `nlm_midpoint()` implements diamond-square displacement and crops nonconforming sizes.
+3. `nlm_ambient()` now implements separate Perlin, simplex and value noise; these are finite-lattice simulations and do not replicate every convention of other noise libraries.
 4. `nlm_points(method="strauss")` uses finite-run Metropolis relocation, not perfect simulation; `"inhibition"` is sequential acceptance.
 5. `nlm_filament(mode="field")` is local-neighbor descent, not validated drainage or optimal routing.
 6. Polygon and blob dimensions are measured in cells; their area and visible count can change after clipping and overlap.

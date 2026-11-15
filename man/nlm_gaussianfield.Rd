@@ -1,7 +1,7 @@
 \name{nlm_gaussianfield}
 \alias{nlm_gaussianfield}
 \title{Gaussianfield generator}
-\description{Generate a CHILE neutral-landscape object or operate on compatible raster fields. Spatial outputs use terra. External environmental data are optional.}
+\description{Exponential-covariance Gaussian field with optional anisotropy, using a periodic spectral approximation.}
 \usage{nlm_gaussianfield(ncol=256, nrow=256, resolution=1, range=20, sill=1, mean=0, angle=0, range_minor=range, template=NULL, seed=NULL)}
 \arguments{
   \item{ncol}{Number of columns when template is absent.}

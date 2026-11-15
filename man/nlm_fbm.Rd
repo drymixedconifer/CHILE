@@ -1,7 +1,7 @@
 \name{nlm_fbm}
 \alias{nlm_fbm}
 \title{Fbm generator}
-\description{Spectral approximation of fractional Brownian surface, not an exact fBm simulation.}
+\description{Anchored spectral approximation of fractional Brownian motion; covariance is not exact.}
 \usage{nlm_fbm(ncol=256, nrow=256, resolution=1, H=0.7, template=NULL, seed=NULL)}
 \arguments{
   \item{ncol}{Number of columns when template is absent.}

@@ -3,12 +3,12 @@ nlm_list <- function(family=NULL) {
   catalog <- data.frame(
     function_name=c('nlm_random','nlm_gaussianfield','nlm_gaussianfield_matern',
       'nlm_anisotropic','nlm_multiscale','nlm_nonstationary','nlm_spectral',
-      'nlm_fbm','nlm_midpoint','nlm_ambient','nlm_planargradient',
+      'nlm_fbm','nlm_midpoint','nlm_ambient','nlm_ambient_flow','nlm_planargradient',
       'nlm_radial','nlm_distance','nlm_percolation','nlm_neighborhood',
       'nlm_curdle','nlm_crosscorrelated','nlm_mosaic','nlm_points',
       'nlm_polygon','nlm_blob','nlm_filament','nlm_partition','nlm_bsp',
-      'nlm_mix','nlm_transform','nlm_compose','nlm_show','nlm_list'),
-    family=c(rep('field',18),'points',rep('geometry',5),rep('operation',3),rep('utility',2)),
+      'nlm_mix','nlm_transform','nlm_compose','nlm_show','nlm_ambient_show','nlm_list'),
+    family=c(rep('field',19),'points',rep('geometry',5),rep('operation',3),rep('utility',3)),
     stringsAsFactors=FALSE
   )
   if (!is.null(family)) catalog <- catalog[catalog$family %in% family,,drop=FALSE]

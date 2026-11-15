@@ -1,7 +1,7 @@
 \name{nlm_midpoint}
 \alias{nlm_midpoint}
 \title{Midpoint generator}
-\description{Multiscale approximation; does not implement classic diamond-square midpoint displacement.}
+\description{Diamond-square midpoint displacement; an enclosing 2^k+1 square is cropped to the requested output dimensions.}
 \usage{nlm_midpoint(size=129, roughness=0.7, ncol=size, nrow=size, resolution=1, template=NULL, seed=NULL)}
 \arguments{
   \item{size}{See default and function-specific parameter definition; interpreted in simulation units.}
