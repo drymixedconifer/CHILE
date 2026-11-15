@@ -1,6 +1,6 @@
 # CHILE v0.9 — Chaos In-Silico Landscape Engine
 
-Standalone generators for spatial random fields, point processes, geometric objects, and composition. **terra + base R**. No sf, external DEM, D8 raster, or cost surface is required.
+Standalone generators for spatial random fields, point processes, geometric objects, and composition. **terra + base R**.
 
 ## Install
 
