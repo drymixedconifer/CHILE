@@ -283,7 +283,11 @@ nlm_compare <- function(observed,simulations,statistic=c('variogram','L','K','g'
     groups <- if ('angle' %in% names(curve)) unique(curve$angle) else 'all'
     oldpar <- graphics::par(no.readonly=TRUE)
     on.exit(graphics::par(oldpar),add=TRUE)
-    if (length(groups)>1) graphics::par(mfrow=c(ceiling(sqrt(length(groups))),ceiling(length(groups)/ceiling(sqrt(length(groups)))))
+    if (length(groups) > 1) {
+      nc <- ceiling(sqrt(length(groups)))
+      nr <- ceiling(length(groups) / nc)
+      graphics::par(mfrow = c(nr, nc))
+    }
     for (g in groups) {
       d <- if (g=='all') curve else curve[curve$angle==g,,drop=FALSE]
       yr <- range(unlist(d[c('observed','lower','upper')]),finite=TRUE)
