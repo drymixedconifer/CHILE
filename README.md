@@ -43,4 +43,5 @@ landscape <- nlm_compose(x,unit2)
 
 ## Development status
 
-This is a package draft prepared without an available R interpreter. It has static checks and test scripts, but **has not been executed in R**. Validate with `R CMD check` before scientific use or public release.
+In Dev. 11/14/26
+
