@@ -5,7 +5,10 @@
   if (is.list(x) && inherits(x$raster, 'SpatRaster')) x <- x$raster
   if (!inherits(x, 'SpatRaster')) stop('Expected a SpatRaster or CHILE result with $raster')
   if (terra::nlyr(x) != 1L) stop('Supply a single raster layer')
-  if (terra::is.lonlat(x)) stop('Use a projected raster: distances must be in linear map units')
+  # An unreferenced synthetic grid is Cartesian in its own coordinate units.
+  # Only reject rasters explicitly identified as geographic lon/lat.
+  if (nzchar(terra::crs(x)) && isTRUE(terra::is.lonlat(x)))
+    stop('Longitude/latitude rasters require projection before distance analysis')
   x
 }
 
@@ -23,12 +26,12 @@
 
 #' Empirical (directional) semivariogram
 #'
-#' Randomly samples raster-cell pairs. Distances are in projected map units;
+#' Randomly samples raster-cell pairs. Distances are in raster coordinate units;
 #' direction angles are counterclockwise from +x (modulo 180 degrees).
 #' The field is assumed intrinsically stationary for semivariogram interpretation.
 #' Returned bin counts give the number of sampled pairs per lag and angle.
 #'
-#' @param x Continuous, single-layer projected SpatRaster.
+#' @param x Continuous, single-layer SpatRaster; CRS is optional for synthetic grids.
 #' @param lag Bin width in map units; default approximately two cell widths.
 #' @param max_dist Largest lag; defaults to one-quarter of the smaller extent.
 #' @param angle Directions in degrees, or NULL for omnidirectional only.
@@ -101,7 +104,7 @@ nlm_variogram <- function(x, lag=NULL, max_dist=NULL, angle=NULL,
 #'
 #' @param x CHILE point result, XY data.frame, or 2-column matrix.
 #' @param r Distances in coordinate units. Defaults to 30 evenly spaced distances.
-#' @param window Four numbers xmin,xmax,ymin,ymax, or a projected SpatRaster.
+#' @param window Four numbers xmin,xmax,ymin,ymax, or a SpatRaster (CRS optional).
 #'   CHILE point results automatically use their raster extent.
 #' @return Data frame with r, K, L (centered), g, and pair counts.
 #' @examples
@@ -117,7 +120,8 @@ nlm_k <- function(x, r=NULL, window=NULL) {
   if (n<2) stop('Need at least two points')
   if (n>3000) stop('For this implementation use <=3000 points or subsample explicitly')
   if (inherits(window,'SpatRaster')) {
-    if (terra::is.lonlat(window)) stop('Project coordinates and raster before distance analysis')
+    if (nzchar(terra::crs(window)) && isTRUE(terra::is.lonlat(window)))
+      stop('Longitude/latitude rasters require projection before distance analysis')
     e <- terra::ext(window); window <- c(e[1],e[2],e[3],e[4])
   }
   if (is.null(window)) stop('Provide window=c(xmin,xmax,ymin,ymax) for observed points')
@@ -156,7 +160,7 @@ nlm_k <- function(x, r=NULL, window=NULL) {
 #'
 #' Patches are defined by connected cells of equal class; default 8-neighbor
 #' connectivity. The background is NA by default and excluded from metrics.
-#' Uses projected linear units; cell sides contribute to perimeter (4 edges).
+#' Uses planar raster coordinate units; cell sides contribute to perimeter (4 edges).
 #' @param x A categorical SpatRaster or CHILE geometry output.
 #' @param threshold If supplied, turn a continuous field into binary patches,
 #'   selecting values >= threshold; other cells are background NA.

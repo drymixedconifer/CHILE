@@ -1,6 +1,6 @@
 Package: CHILE
 Title: Chaos In-Silico Landscape Engine
-Version: 0.9.3
+Version: 0.9.3.1
 Authors@R: person('CHILE', 'Development Team', role=c('aut','cre'), email='maintainer@example.org')
 Description: Standalone generators for synthetic spatial fields, point processes,
     geometric features, landscape composition, and scale-dependent spatial diagnostics. Raster outputs use terra.

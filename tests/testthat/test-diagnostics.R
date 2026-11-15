@@ -29,3 +29,19 @@ test_that('simulation comparison produces pointwise bands', {
   expect_equal(nrow(cmp$curve),3)
   expect_true(all(cmp$curve$upper>=cmp$curve$lower))
 })
+
+
+test_that('unreferenced synthetic fields and points need no CRS', {
+  x <- nlm_anisotropic(ncol=40, nrow=40, seed=1)
+  terra::crs(x) <- ''
+  expect_equal(terra::crs(x), '')
+  v <- nlm_variogram(x, lag=2, max_dist=12, pairs=3000, seed=2)
+  expect_true(nrow(v)>0)
+  p <- nlm_points(ncol=40, nrow=40, n=50, seed=3)
+  terra::crs(p$raster) <- ''
+  k <- nlm_k(p, r=c(2,4,6))
+  expect_equal(nrow(k), 3)
+  sims <- lapply(4:6, function(i) nlm_points(ncol=40,nrow=40,n=50,seed=i))
+  cmp <- nlm_compare(p, sims, statistic='L', r=c(2,4,6), plot=FALSE)
+  expect_equal(nrow(cmp$curve), 3)
+})

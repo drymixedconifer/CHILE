@@ -199,3 +199,11 @@ nlm_metrics(x, threshold = 0.7)$summary
 Patch metrics assume a planar equal-sized raster grid. `directions` determines connected components (4 or 8 neighbors); perimeter always counts exposed cell sides. Object IDs in a CHILE geometry result are treated as separate classes, so overlapping objects can fragment into multiple visible patches. For a single foreground class, pass a binary raster or threshold a continuous one.
 
 **Interpretation:** With 20 simulations, pointwise 2.5% and 97.5% quantiles are descriptive and poorly resolved at the tails. Exceeding those curves is not automatically a formal model rejection. Comparing an observed pattern with fitted model simulations also requires accounting for parameter estimation and the observation-window design.
+
+### Synthetic grids and diagnostics
+
+`nlm_variogram()`, `nlm_k()`, `nlm_metrics()`, and `nlm_compare()` accept
+rasters with no CRS. Distances use the raster coordinate units (e.g., with
+`resolution = 1`, distances are measured in cell-width units). Geographic
+longitude/latitude rasters should be projected before planar distance analysis.
+For raw XY point tables, supply `window = c(xmin, xmax, ymin, ymax)`.
