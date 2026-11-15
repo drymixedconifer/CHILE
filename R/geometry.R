@@ -28,7 +28,7 @@ nlm_polygon <- function(ncol=256,nrow=256,resolution=1,n=30,min_size=8,max_size=
     x <- c(-1,1,1+skew,-1+skew)*w/2
     y <- c(-1,-1,1,1)*h/2
     x[3:4] <- x[3:4]*(1-taper)
-    a <- p$angle*pi/180
+    a <- -p$angle*pi/180
     xx <- x*cos(a)-y*sin(a)+p$col
     yy <- x*sin(a)+y*cos(a)+p$row
     cc <- seq.int(max(1,floor(min(xx))),min(nc,ceiling(max(xx))))
