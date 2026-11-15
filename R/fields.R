@@ -62,7 +62,7 @@ nlm_anisotropic <- function(ncol = 256, nrow = 256, resolution = 1,
   nr <- terra::nrow(r); nc <- terra::ncol(r)
   fx <- matrix(rep(.chile_freq(nc) / terra::res(r)[1], each = nr), nr, nc)
   fy <- matrix(rep(.chile_freq(nr) / terra::res(r)[2], times = nc), nr, nc)
-  a <- angle * pi / 180
+  a <- -angle * pi / 180
   u <- fx * cos(a) + fy * sin(a)
   v <- -fx * sin(a) + fy * cos(a)
   amp <- exp(-pi^2 * ((range_major * u)^2 + (range_minor * v)^2))
