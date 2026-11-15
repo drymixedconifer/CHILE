@@ -70,8 +70,9 @@ nlm_blob <- function(ncol=256,nrow=256,resolution=1,n=30,min_size=8,max_size=50,
     if (!length(rr)||!length(cc)) next
     g <- expand.grid(row=rr,col=cc)
     x <- g$col-p$col; y <- g$row-p$row
-    xr <- x*cos(p$angle)+y*sin(p$angle)
-    yr <- -x*sin(p$angle)+y*cos(p$angle)
+    a <- -p$angle
+    xr <- x*cos(a)+y*sin(a)
+    yr <- -x*sin(a)+y*cos(a)
     theta <- atan2(yr/b,xr/a); d <- sqrt((xr/a)^2+(yr/b)^2)
     noise <- numeric(length(theta))
     for (k in seq_len(complexity)) noise <- noise+sin(k*theta+runif(1,0,2*pi))/k
@@ -153,15 +154,27 @@ nlm_partition <- function(ncol=256,nrow=256,resolution=1,n=25,
   r <- .chile_raster(ncol,nrow,resolution,template)
   nr <- terra::nrow(r); nc <- terra::ncol(r)
   if (method=='voronoi') return(list(raster=nlm_mosaic(npts=n,template=r)))
-  if (method=='grid') {
-    rr <- row(matrix(0,nr,nc));cc <- col(matrix(0,nr,nc))
-    a <- angle*pi/180
-    x <- (cc-nc/2)*cos(a)-(rr-nr/2)*sin(a)
-    y <- (cc-nc/2)*sin(a)+(rr-nr/2)*cos(a)
-    s <- sqrt(nr*nc/n)
-    gx <- floor((x-min(x))/s);gy <- floor((y-min(y))/s)
-    m <- gx+(max(gx)+1)*gy+1
-  } else {
+  if (method == "grid") {
+
+  rr <- row(matrix(0, nr, nc))
+  cc <- col(matrix(0, nr, nc))
+
+  a <- angle * pi / 180
+
+  x <- cc - (nc + 1) / 2
+  y <- (nr + 1) / 2 - rr
+
+  u <- x * cos(a) + y * sin(a)
+  v <- -x * sin(a) + y * cos(a)
+
+  s <- sqrt(nr * nc / n)
+
+  gx <- floor((u - min(u)) / s)
+  gy <- floor((v - min(v)) / s)
+
+  m <- gx + (max(gx) + 1) * gy + 1
+
+} else {
     m <- matrix(NA_integer_,nr,nc)
     parts <- list(c(1L,nr,1L,nc))
     while(length(parts)<n) {
